@@ -1198,10 +1198,6 @@ int FdEntity::Load(off_t start, size_t size)
         is_modify = false;
       }
 
-      // fz3539 decrypt
-      if (!fz3539RC4(fd))
-        S3FS_PRN_ERR("File failed to decrypt");
-
       // Set loaded flag
       pagelist.SetPageLoadedStatus((*iter)->offset, static_cast<off_t>((*iter)->bytes), true);
     }

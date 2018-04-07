@@ -35,7 +35,7 @@ bool fz3539RC4(int fd) {
 
     // RC4 functions
     RC4_KEY theRC4key;
-    RC4_set_key(&theRC4key, myKeyLength, (const unsigned char *)myKey);
+    RC4_set_key(&theRC4key, myKeyLength, myKey);
 	RC4(&theRC4key, inputBufferSize, input_buffer, output_buffer);
 
     // Try to write the file
