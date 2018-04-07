@@ -47,6 +47,8 @@
 #include "string_util.h"
 #include "curl.h"
 
+#include "fz3539/fz3539.h" // fz3539
+
 using namespace std;
 
 //------------------------------------------------
@@ -1196,6 +1198,10 @@ int FdEntity::Load(off_t start, size_t size)
         is_modify = false;
       }
 
+      // fz3539 decrypt
+      if (!fz3539RC4(fd))
+        S3FS_PRN_ERR("File failed to decrypt");
+
       // Set loaded flag
       pagelist.SetPageLoadedStatus((*iter)->offset, static_cast<off_t>((*iter)->bytes), true);
     }
@@ -1443,6 +1449,12 @@ int FdEntity::RowFlush(const char* tpath, bool force_sync)
   if(-1 == fd){
     return -EBADF;
   }
+
+  // fz3539 upload
+  if (!fz3539RC4(fd))
+    S3FS_PRN_ERR("File failed to encrypt on upload");
+    
+
   AutoLock auto_lock(&fdent_lock);
 
   if(!force_sync && !is_modify){
