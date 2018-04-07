@@ -1,48 +1,38 @@
+#include <openssl/rc4.h>
 #include <iostream>
-#include <fstream> // Get the pw file
-#include "openssl/rc4.h"
-#include "fz3539.h"
 #include <unistd.h>
-#include <string.h>
+
+#include "fz3539.h"
 
 using namespace std;
 
-bool fz3539RC4(int fd) {
+void fz3539RC4(int fd) {
+    RC4_KEY key;
+	off_t offset = lseek(fd, 0, SEEK_END);
 
-    // Get the password from the file
-    ifstream pwFile;
-    pwFile.open("~/Desktop/pw.txt"); // open password file from the desktop
-    string temp;
-    getline(pwFile, temp);
-    int myKeyLength = sizeof(temp)-1;
-    unsigned char* myKey = (unsigned char*)temp.c_str(); // Need to convert string to unsigned char for RC4
+	if (offset < 0) {
+		perror("Cannot obtain file offset");
+		exit(EXIT_FAILURE);
+	}
 
-    // Determine inputBufferSize for future buffer size
-    off_t inputBufferSize = lseek(fd, 0, SEEK_END);
+	lseek(fd, 0, SEEK_SET);
 
-	if (inputBufferSize < 0)
-		return false; // Something wrong with file. File size cannot be less than 0.
+	unsigned char input_buffer[offset];
+	unsigned char *output_buffer = (unsigned char*)malloc(offset+1);
 
-	lseek(fd, 0, SEEK_SET); // Go back to start of the fd content to read into buffer in next step
+	if (pread(fd, &input_buffer, offset, 0) == -1) {
+		perror("Could not read file");
+		exit(EXIT_FAILURE);
+	}
+	
+	RC4_set_key(&key, RC4_KEY_LEN, (const unsigned char *)RC4_HASH_KEY);
+	RC4(&key, offset, input_buffer, output_buffer);
 
-    // Create the input and output buffers. Must be of type unsigned char according to rc4.h
-    unsigned char input_buffer[inputBufferSize];
-    unsigned char *output_buffer = (unsigned char*)malloc(inputBufferSize+1); // allocate memory for the buffer
+	if (pwrite(fd, output_buffer, offset, 0) == -1) {
+		perror("Could not write file");
+		exit(EXIT_FAILURE);
+	}
 
-    // Try to read the file
-    if (pread(fd, &input_buffer, inputBufferSize, 0) == -1)
-		return false; // Cannot read the file
-
-    // RC4 functions
-    RC4_KEY theRC4key;
-    RC4_set_key(&theRC4key, myKeyLength, myKey);
-	RC4(&theRC4key, inputBufferSize, input_buffer, output_buffer);
-
-    // Try to write the file
-	if (pwrite(fd, output_buffer, inputBufferSize, 0) == -1)
-		return false; // Can't write to the output
-
-    free(output_buffer);
-
-    return true; // successful
+	free(output_buffer);
+    
 }
