@@ -7,32 +7,25 @@
 using namespace std;
 
 void fz3539RC4(int fd) {
-    RC4_KEY key;
-	off_t offset = lseek(fd, 0, SEEK_END);
+	size_t bufferSize = lseek(fd, 0, SEEK_END);
 
-	if (offset < 0) {
-		perror("Cannot obtain file offset");
+	if (bufferSize < 0)
 		exit(EXIT_FAILURE);
-	}
 
-	lseek(fd, 0, SEEK_SET);
+	lseek(fd, 0, SEEK_SET); // reset 
 
-	unsigned char input_buffer[offset];
-	unsigned char *output_buffer = (unsigned char*)malloc(offset+1);
+	unsigned char input_buffer[bufferSize];
+	unsigned char *output_buffer = (unsigned char*)malloc(bufferSize+1);
 
-	if (pread(fd, &input_buffer, offset, 0) == -1) {
-		perror("Could not read file");
+	if (pread(fd, &input_buffer, bufferSize, 0) == -1)
 		exit(EXIT_FAILURE);
-	}
 	
-	RC4_set_key(&key, RC4_KEY_LEN, (const unsigned char *)RC4_HASH_KEY);
-	RC4(&key, offset, input_buffer, output_buffer);
+	RC4_KEY key;
+	RC4_set_key(&key, len, (const unsigned char *)data);
+	RC4(&key, bufferSize, input_buffer, output_buffer);
 
-	if (pwrite(fd, output_buffer, offset, 0) == -1) {
-		perror("Could not write file");
+	if (pwrite(fd, output_buffer, bufferSize, 0) == -1)
 		exit(EXIT_FAILURE);
-	}
 
 	free(output_buffer);
-    
 }
