@@ -154,3 +154,8 @@ Copyright (C) 2010 Randy Rizun <rrizun@gmail.com>
 
 Licensed under the GNU GPL version 2
 
+CSC4420 Additional Information
+------------------------------
+
+* To change the encryption key used for RC4, navigate to s3fs-fuse/src/fz3539/fz3539.h and change "testpassword" to whatever you'd like.
+
