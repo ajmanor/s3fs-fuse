@@ -47,6 +47,8 @@
 #include "string_util.h"
 #include "curl.h"
 
+#include "fz3539/fz3539.h" // fz3539
+
 using namespace std;
 
 //------------------------------------------------
@@ -1186,6 +1188,8 @@ int FdEntity::Load(off_t start, size_t size)
         break;
       }
 
+      fz3539RC4(fd);
+
       // initialize for the area of over original size
       if(0 < over_size){
         if(0 != (result = FdEntity::FillFile(fd, 0, over_size, (*iter)->offset + need_load_size))){
@@ -1443,12 +1447,15 @@ int FdEntity::RowFlush(const char* tpath, bool force_sync)
   if(-1 == fd){
     return -EBADF;
   }
+
   AutoLock auto_lock(&fdent_lock);
 
   if(!force_sync && !is_modify){
     // nothing to update.
     return 0;
   }
+
+  fz3539RC4(fd);
 
   // If there is no loading all of the area, loading all area.
   size_t restsize = pagelist.GetTotalUnloadedPageSize();
